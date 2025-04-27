@@ -81,10 +81,9 @@ if use_xp12:
         connected = wifi.isconnected()
         ip = wifi.ipv4()
         secr = wifi._secrets()[0]
-        # stats = wifi._statuses
+
         if my_debug:
             print("Hurray! We have a WiFi connection!")
-            # print(f"dir(wifi) = {dir(wifi)}")
             print(f"access point SSID = {secr}")
             print(f"ezwifi.ipv4() = {ip}")
             """
@@ -98,6 +97,7 @@ if use_xp12:
             """
             # print(f"stats = {stats}")
 
+    
     def failed_handler(wifi):
         print("Afff...WiFi connection failed!")
         #pass
