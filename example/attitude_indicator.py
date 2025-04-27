@@ -12,6 +12,56 @@ my_debug = False
 use_xp12 = True
 use_joystick_data = False
 
+
+# Setup for the Presto display
+presto = Presto(ambient_light=False)
+display = presto.display
+WIDTH, HEIGHT = display.get_bounds()
+CX = WIDTH // 2
+CY = HEIGHT // 2
+x, y = 0, CY
+x_prev = x
+y_prev = y
+ 
+# Colours
+GRAY = display.create_pen(42, 52, 57)
+BLACK = display.create_pen(0, 0, 0)
+SKY_COLOUR = display.create_pen(86, 159, 201)
+GROUND_COLOUR = display.create_pen(101, 81, 63)
+WHITE = display.create_pen(255, 255, 255)
+RED = display.create_pen(200, 0, 0)
+
+# Pico Vector
+vector = PicoVector(display)
+vector.set_antialiasing(ANTIALIAS_FAST)
+t = Transform()
+normal = Transform()
+vector.set_transform(t)
+
+# Setup some of our vector shapes
+background_rect = Polygon()
+background_rect.rectangle(0, 0, WIDTH, HEIGHT)
+background_rect.circle(CX, CY, 109)
+
+instrument_outline = Polygon().circle(CX, CY, 110, stroke=8)
+
+ground = Polygon().rectangle(0, HEIGHT // 2, WIDTH, HEIGHT)
+horizon = Polygon().rectangle(0, HEIGHT // 2, WIDTH, 2)
+pitch_lines = Polygon()
+
+for line in range(1, 7):
+    if line % 2:
+        pitch_lines.rectangle(CX - 10, CY - line * 14, 20, 1.5)
+        pitch_lines.rectangle(CX - 10, CY + line * 14, 20, 1.5)
+    else:
+        pitch_lines.rectangle(CX - 30, CY - line * 14, 60, 1.5)
+        pitch_lines.rectangle(CX - 30, CY + line * 14, 60, 1.5)
+
+craft_centre = Polygon().circle(CX, CY - 1, 2)
+craft_left = Polygon().rectangle(CX - 70, CY - 1, 50, 2, (2, 2, 2, 2))
+craft_right = Polygon().rectangle(CX + 20, CY - 1, 50, 2, (2, 2, 2, 2))
+craft_arc = Polygon().arc(CX, CY, 22, -90, 90, stroke=2)
+
 if use_xp12:
     UDP_PORT = 49707
     import ezwifi # from ezwifi import EzWiFi # type: ignore
@@ -51,9 +101,9 @@ if use_xp12:
     def failed_handler(wifi):
         print("Afff...WiFi connection failed!")
         #pass
-
     
     try:
+        #wifi.connect()  # connectd is wifi <generator object 'connect' at 11038b90>object! ()
         ezwifi.connect(verbose=True if my_debug == True else False,
                        connected=connect_handler, failed=failed_handler)
     except ValueError as e:
@@ -77,66 +127,12 @@ if use_xp12:
         sock = socket.socket(socket.AF_INET, # Internet
                         socket.SOCK_DGRAM) # UDP
         sock.bind((UDP_IP, UDP_PORT))
-        
         if sock is None:
             print("Creating sock failed. Exiting...")
             raise RuntimeError
         else:
             if my_debug:
                 print(f"We have a socket: {sock}.")
-
-# Setup for the Presto display
-presto = Presto(ambient_light=False)
-display = presto.display
-WIDTH, HEIGHT = display.get_bounds()
-CX = WIDTH // 2
-CY = HEIGHT // 2
-
-# Colours
-GRAY = display.create_pen(42, 52, 57)
-BLACK = display.create_pen(0, 0, 0)
-SKY_COLOUR = display.create_pen(86, 159, 201)
-GROUND_COLOUR = display.create_pen(101, 81, 63)
-WHITE = display.create_pen(255, 255, 255)
-RED = display.create_pen(200, 0, 0)
-
-# Pico Vector
-vector = PicoVector(display)
-vector.set_antialiasing(ANTIALIAS_FAST)
-t = Transform()
-normal = Transform()
-vector.set_transform(t)
-
-x, y = 0, CY
-x_prev = x
-y_prev = y
-
-
-# Setup some of our vector shapes
-background_rect = Polygon()
-background_rect.rectangle(0, 0, WIDTH, HEIGHT)
-background_rect.circle(CX, CY, 109)
-
-instrument_outline = Polygon().circle(CX, CY, 110, stroke=8)
-
-ground = Polygon().rectangle(0, HEIGHT // 2, WIDTH, HEIGHT)
-horizon = Polygon().rectangle(0, HEIGHT // 2, WIDTH, 2)
-pitch_lines = Polygon()
-
-for line in range(1, 7):
-    if line % 2:
-        pitch_lines.rectangle(CX - 10, CY - line * 14, 20, 1.5)
-        pitch_lines.rectangle(CX - 10, CY + line * 14, 20, 1.5)
-    else:
-        pitch_lines.rectangle(CX - 30, CY - line * 14, 60, 1.5)
-        pitch_lines.rectangle(CX - 30, CY + line * 14, 60, 1.5)
-
-craft_centre = Polygon().circle(CX, CY - 1, 2)
-craft_left = Polygon().rectangle(CX - 70, CY - 1, 50, 2, (2, 2, 2, 2))
-craft_right = Polygon().rectangle(CX + 20, CY - 1, 50, 2, (2, 2, 2, 2))
-craft_arc = Polygon().arc(CX, CY, 22, -90, 90, stroke=2)
-
-
 def show_message(text):
     display.set_pen(GRAY)
     display.clear()
@@ -153,6 +149,10 @@ def DecodeDataMessage(message):
     type = int.from_bytes(message[0:typelen], 'little') # byteorder='little')
     if my_debug:
         print(TAG + f"type = {type}")
+        
+    if type != 8 and type != 17:
+        values["type"] = type  # Create a default result with at least the key "type" in it.
+        
     data = message[typelen:]
     dataFLOATS = None
     if use_joystick_data:
@@ -237,39 +237,88 @@ def main():
     alpha = 0.15
     
     # UDP msg type sensitivity factors
+    msg_type = None
     type08_mult = 10000
     type17_mult = 100
+    le_data = 0
     
     while True:
+        
         if use_xp12:
             if sock is None:
                 if my_debug:
                     print(f"type(sock) = {type(sock)}. Check WiFi. Cannot continue...")
                 raise RuntimeError
             else:
-                # Receive a packet
-                data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
+                deadline = time.ticks_ms() + 5000 # 5 seconds
+                if my_debug:
+                    print(f"socket timeout deadline = {deadline} mSecs")
+                sock.setblocking(False)  # Switch off blocking.
+                while True:
+                    try:
+                        t_out = deadline - time.ticks_ms()
+                        print(f"timeout = {t_out} mSecs")
+                        sock.settimeout(t_out)
+                        # Receive a packet
+                        data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
+                        if isinstance(data, bytes):
+                            if my_debug:
+                                print(f"data = \"{data}\"")
+                            le_data = len(data)
+                            if le_data > 0:
+                                if my_debug:
+                                    print(f"length data received: {le_data}") # usual: 221 bytes
+                                break
+                    except TimeoutError as exc:
+                        print(f"X-Plane12 receive socket timed out with error: {exc}")
+                    except OSError as exc:
+                        errnr = exc.args[0]
+                        if errnr == 11: # EAGAIN
+                            if my_debug:
+                                print(f"EAGAIN error occurred. Skipping.")
+                            continue
+                        else:
+                            print(TAG + f"Error: {exc}")
                 
                 # Decode the packet. Result is a python dict (like a map in C) with values from X-Plane.
                 # Example:                         magnetic           true
                 #   'roll': 1.05, 'pitch': -4.38, 'heading': 275.43, 'heading2': 271.84}
-                if data is not None:
+                if data is None:
+                    ax = 0.0 # Make that the attitude indicator is set horizontal
+                    ay = 0.0
+                    y_axis = 370,
+                    y_prev = 370,
+                    y_axis = 370,
+                    y_prev = 370
+                    if my_debug:
+                        print(f"Noting received (yet): data = \"{data}\"")
+                else:  
                     if my_debug:
                         print(TAG + f"packet received from host with IP-addres: {addr[0]}, via port: {addr[1]}")
                     values = DecodePacket(data)
+                    if "type" in values.keys():
+                        msg_type = values["type"]
+                        if my_debug:
+                            print(f"message type received: {msg_type}")
+                    else:
+                        msg_type = 99 # pseudo for unknown message type
+                        
+                    if msg_type != 8 and msg_type != 17:
+                        continue  # go around
 
-                    if use_joystick_data:
+                    if use_joystick_data: 
                         if values["type"] == 8:  # = Joystick
                             ax = values["aileron"]   * type08_mult  # pitch
                             ay = values["elevation"] * type08_mult  # roll
                             az = values["rudder"]    * type08_mult  # heading
 
                             if not my_debug:
-                                print(TAG + f"ax = {ax}, ay = {ay}, az = {az}")
+                                t1 = "ax: {:9.5f}, ay: {:9.4f}, az: {:8.2f}".format(ax, ay, az)
+                                print(TAG + f"data from X-Plane12: {t1}")
                                 # print(TAG + f" values: {values}")
                         else:
                             if my_debug:
-                                print(TAG + f"Not handling data of type: {type}")
+                                print(TAG + f"No data received of type: 8")
                     else:
                         if values["type"] == 17: # = aircraft attitude
                             ax = values["roll"]    * type17_mult  # pitch
@@ -277,17 +326,17 @@ def main():
                             az = values["heading"] * type17_mult  # heading
 
                             if not my_debug:
-                                print(TAG + f"ax = {ax}, ay = {ay}, az = {az}")
+                                t1 = "ax: {:9.5f}, ay: {:9.4f}, az: {:8.2f}".format(ax, ay, az)
+                                print(TAG + f"data from X-Plane12: {t1}")
                                 # print(TAG + f" values: {values}")
+                        
                         else:
                             if my_debug:
-                                print(TAG + f"Not handling data of type: {type}")
+                                print(TAG + f"No data received of type: 17")
                     
                     # Clear screen with the SKY colour
                     display.set_pen(SKY_COLOUR)
                     display.clear()
-                else:
-                    print(f"Noting received: data = \"{data}\"")
         else:
             try:
                 i2c = machine.I2C()
@@ -311,7 +360,7 @@ def main():
 
         # Apply some smoothing to the X and Y
         # and cap the Y with min/max
-        if not my_debug:
+        if my_debug:
             print(TAG + f"y_axis = {y_axis}, alpha = {alpha}, ay  {ay}, y_prev = {y_prev}")
         y_axis = max(-11000, min(int(alpha * ay + (1 - alpha) * y_prev), 11000))
         # print(TAG + f"y_axis = {y_axis}")
@@ -320,8 +369,7 @@ def main():
         x_axis = int(alpha * ax + (1 - alpha) * x_prev)
         x_prev = x_axis
 
-
-        if not my_debug:
+        if my_debug:
             print(TAG + f"ax = {ax}, ay = {ay}, az = {az}")
             print(TAG + f"y_axis = {y_axis}, y_prev = {y_prev}, y_axis = {y_axis}, y_prev = {y_prev}")
         # Draw the ground
