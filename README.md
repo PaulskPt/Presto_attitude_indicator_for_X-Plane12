@@ -42,7 +42,7 @@ Notes:
 
 Images: see folder [images](https://github.com/PaulskPt/Presto_attitude_indicator_for_X-Plane12/tree/main/Images)
 
-This example is in the folder [example](/https://github.com/PaulskPt/Presto_attitude_indicator_for_X-Plane12/tree/main/example).
+This example is in the folder [example](https://github.com/PaulskPt/Presto_attitude_indicator_for_X-Plane12/tree/main/example).
 
 For a short video impression see: [video](https://imgur.com/a/rfMumGc)
 
