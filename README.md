@@ -1,6 +1,6 @@
 ## Presto attitude indicator for X-Plane12
 
-First a "Thank you!" to Pimoroni and its colaborators for this nice new product, the Pimoroni Presto (standalone: PIM725 or kit: PIM765)
+First a "Thank you!" to Pimoroni and its collaborators for this nice new product, the Pimoroni Presto (standalone: PIM725 or kit: PIM765)
 [product](https://shop.pimoroni.com/products/presto?variant=54894104019323)
 
 This is a modified version of the example ```Demo for the Multi-Sensor Stick``` that comes with the [software](https://github.com/pimoroni/presto) for the Presto.
