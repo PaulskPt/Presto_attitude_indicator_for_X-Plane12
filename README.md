@@ -10,7 +10,7 @@ In it's modified version the attitude indicator uses UDP-datagram messages broad
 
 You still can use this example in its original way.
 
-To use the data from the Multi-Sensor Stick set global variable "use_xp12 to ```False``` (line 12).
+To use the data from the Multi-Sensor Stick set global variable "use_xp12" to ```False``` (line 12).
 
 Default the global variable "use_xp12" is set to ```True```.
 
