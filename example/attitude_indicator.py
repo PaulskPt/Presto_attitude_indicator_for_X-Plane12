@@ -51,9 +51,9 @@ if use_xp12:
     def failed_handler(wifi):
         print("Afff...WiFi connection failed!")
         #pass
+
     
     try:
-        #wifi.connect()  # connectd is wifi <generator object 'connect' at 11038b90>object! ()
         ezwifi.connect(verbose=True if my_debug == True else False,
                        connected=connect_handler, failed=failed_handler)
     except ValueError as e:
