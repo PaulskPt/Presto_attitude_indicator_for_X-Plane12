@@ -10,7 +10,7 @@ In it's modified version the attitude indicator uses UDP-datagram messages broad
 
 You still can use this example in its original way.
 
-To use the data from the Multi-Sensor Stick set global variable "use_xp12 to ```False``` (line 12).
+To use the data from the Multi-Sensor Stick set global variable "use_xp12" to ```False``` (line 12).
 
 Default the global variable "use_xp12" is set to ```True```.
 
@@ -38,10 +38,11 @@ Notes:
     240 ```type08_mult = 10000```  (attitude indicator as function of Joystick movement)
     241 ```type17_mult = 100```    (attitude indicator as function of Aircraft movement (default))
 
+4) in the file ```secrets.py``` fill-in the SSID of your WiFi access point and the PASSWORD.
 
 Images: see folder [images](https://github.com/PaulskPt/Presto_attitude_indicator_for_X-Plane12/tree/main/Images)
 
-This example is in the folder [example](/https://github.com/PaulskPt/Presto_attitude_indicator_for_X-Plane12/tree/main/example).
+This example is in the folder [example](https://github.com/PaulskPt/Presto_attitude_indicator_for_X-Plane12/tree/main/example).
 
 For a short video impression see: [video](https://imgur.com/a/rfMumGc)
 
