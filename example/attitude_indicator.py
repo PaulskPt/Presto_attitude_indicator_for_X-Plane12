@@ -9,7 +9,7 @@ from lsm6ds3 import LSM6DS3, NORMAL_MODE_104HZ # type: ignore
 import time
 
 my_debug = False
-use_xp12 = False
+use_xp12 = True
 use_joystick_data = False
 
 
