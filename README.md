@@ -39,7 +39,7 @@ Notes:
     241 ```type17_mult = 100```    (attitude indicator as function of Aircraft movement (default))
 
 
-Images: see folder ```images```
+Images: see folder [images](https://github.com/PaulskPt/Presto_attitude_indicator_for_X-Plane12/tree/main/Images)
 
 This example is in the folder ```example```.
 
