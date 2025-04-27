@@ -9,7 +9,7 @@ from lsm6ds3 import LSM6DS3, NORMAL_MODE_104HZ # type: ignore
 import time
 
 my_debug = False
-use_xp12 = True
+use_xp12 = False
 use_joystick_data = False
 
 
@@ -81,9 +81,10 @@ if use_xp12:
         connected = wifi.isconnected()
         ip = wifi.ipv4()
         secr = wifi._secrets()[0]
-
+        # stats = wifi._statuses
         if my_debug:
             print("Hurray! We have a WiFi connection!")
+            # print(f"dir(wifi) = {dir(wifi)}")
             print(f"access point SSID = {secr}")
             print(f"ezwifi.ipv4() = {ip}")
             """
@@ -97,7 +98,6 @@ if use_xp12:
             """
             # print(f"stats = {stats}")
 
-    
     def failed_handler(wifi):
         print("Afff...WiFi connection failed!")
         #pass
@@ -360,8 +360,9 @@ def main():
 
         # Apply some smoothing to the X and Y
         # and cap the Y with min/max
-        if my_debug:
-            print(TAG + f"y_axis = {y_axis}, alpha = {alpha}, ay  {ay}, y_prev = {y_prev}")
+        if not my_debug:
+            t1 = "y_axis = {:>6.0f}, alpha = {:4.2f}, ay  {:>6d}, y_prev = {:>6d}".format(y_axis, alpha, ay, y_prev)
+            print(TAG + f"{t1}")
         y_axis = max(-11000, min(int(alpha * ay + (1 - alpha) * y_prev), 11000))
         # print(TAG + f"y_axis = {y_axis}")
         y_prev = y_axis
@@ -370,8 +371,10 @@ def main():
         x_prev = x_axis
 
         if my_debug:
-            print(TAG + f"ax = {ax}, ay = {ay}, az = {az}")
-            print(TAG + f"y_axis = {y_axis}, y_prev = {y_prev}, y_axis = {y_axis}, y_prev = {y_prev}")
+            t1 = "ax = {:>6d}, ay = {:>6d}, az = {:>6d}".format(ax, ay, az)
+            print(TAG + f"{t1}")
+            t1 = "x_axis = {:>6.0f}, x_prev = {:>6d}, y_axis = {:>6.0f}, y_prev = {:>6d}".format(x_axis, x_prev, y_axis, y_prev)
+            print(TAG + f"{t1}")
         # Draw the ground
         t.reset()
         t.rotate(-x_axis / 180, (WIDTH // 2, HEIGHT // 2))
