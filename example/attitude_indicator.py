@@ -308,8 +308,8 @@ while True:
 
                 if use_joystick_data: 
                     if values["type"] == 8:  # = Joystick
-                        ax = values["aileron"]   * type08_mult  # pitch
-                        ay = values["elevation"] * type08_mult  # roll
+                        ax = values["aileron"]   * type08_mult  # roll
+                        ay = values["elevation"] * type08_mult  # pitch
                         az = values["rudder"]    * type08_mult  # heading
 
                         if not my_debug:
@@ -321,8 +321,8 @@ while True:
                             print(TAG + f"No data received of type: 8")
                 else:
                     if values["type"] == 17: # = aircraft attitude
-                        ax = values["roll"]    * type17_mult  # pitch
-                        ay = values["pitch"]   * type17_mult  # roll
+                        ax = values["roll"]    * type17_mult * 1.5  # roll
+                        ay = values["pitch"]   * type17_mult  # # pitch
                         az = values["heading"] * type17_mult  # heading
 
                         if not my_debug:
