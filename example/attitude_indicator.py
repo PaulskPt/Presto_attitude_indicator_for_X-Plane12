@@ -1,17 +1,17 @@
 # ICON [[(-4.5, 16.82), (-9.92, 6.75), (-19.99, 1.33), (-16.1, -2.5), (-8.17, -1.13), (-2.58, -6.71), (-19.93, -14.1), (-15.33, -18.8), (5.73, -15.08), (12.52, -21.87), (13.6, -22.66), (15.25, -23.11), (16.46, -23.05), (17.73, -22.63), (19.14, -21.42), (19.62, -20.63), (19.97, -19.45), (19.99, -18.25), (19.79, -17.33), (19.32, -16.37), (18.79, -15.72), (11.92, -8.84), (15.64, 12.17), (10.99, 16.82), (3.54, -0.53), (-2.04, 5.05), (-0.61, 12.93), (-4.5, 16.82)]]
 # NAME Attitude Indicator
 # DESC A Demo for the Multi-Sensor Stick
-# Modified version for use with X-Plane12 by Paulus Schulinck (Github handle: @PaulskPt)
-from presto import Presto # type: ignore
-from picovector import ANTIALIAS_FAST, PicoVector, Polygon, Transform # type: ignore
-import machine # type: ignore
-from lsm6ds3 import LSM6DS3, NORMAL_MODE_104HZ # type: ignore
+from presto import Presto
+from picovector import ANTIALIAS_FAST, PicoVector, Polygon, Transform
+import machine
+from lsm6ds3 import LSM6DS3, NORMAL_MODE_104HZ
 import time
+
+# Script modified version for use with X-Plane12 by Paulus Schulinck (Github handle: @PaulskPt)
 
 my_debug = False
 use_xp12 = True
 use_joystick_data = False
-
 
 # Setup for the Presto display
 presto = Presto(ambient_light=False)
@@ -22,7 +22,7 @@ CY = HEIGHT // 2
 x, y = 0, CY
 x_prev = x
 y_prev = y
- 
+
 # Colours
 GRAY = display.create_pen(42, 52, 57)
 BLACK = display.create_pen(0, 0, 0)
@@ -34,9 +34,9 @@ RED = display.create_pen(200, 0, 0)
 # Pico Vector
 vector = PicoVector(display)
 vector.set_antialiasing(ANTIALIAS_FAST)
-t = Transform()
+trf = Transform()
 normal = Transform()
-vector.set_transform(t)
+vector.set_transform(trf)
 
 # Setup some of our vector shapes
 background_rect = Polygon()
@@ -61,13 +61,30 @@ craft_centre = Polygon().circle(CX, CY - 1, 2)
 craft_left = Polygon().rectangle(CX - 70, CY - 1, 50, 2, (2, 2, 2, 2))
 craft_right = Polygon().rectangle(CX + 20, CY - 1, 50, 2, (2, 2, 2, 2))
 craft_arc = Polygon().arc(CX, CY, 22, -90, 90, stroke=2)
+    
+def show_message(text):
+    display.set_pen(GRAY)
+    display.clear()
+    display.set_pen(WHITE)
+    display.text(f"{text}", 5, 10, WIDTH, 2)
+    presto.update()
+    
+# see: https:/github.com/pimoroni/presto/blob/main/docs/picovector.md
+def disp_text(txt):
+    hPos = 5
+    vPos = 30
+    display.set_pen(GRAY)
+    display.clear()
+    display.set_pen(RED)
+    display.text(txt, hPos, vPos, WIDTH, 2)
+    display.set_pen(WHITE)
+    presto.update()
+
 
 if use_xp12:
-    UDP_PORT = 49707
-    import ezwifi # from ezwifi import EzWiFi # type: ignore
     import socket
     import struct
-    # wifi = EzWiFi()
+    UDP_PORT = 49707
     UDP_IP = ""
     ip = None
     connected = False
@@ -76,50 +93,39 @@ if use_xp12:
     try_cnt = 0
     try_cnt_max = 9
     
-    def connect_handler(wifi):
-        global connected, ip, secr
-        connected = wifi.isconnected()
-        ip = wifi.ipv4()
-        secr = wifi._secrets()[0]
-        # stats = wifi._statuses
-        if my_debug:
-            print("Hurray! We have a WiFi connection!")
-            # print(f"dir(wifi) = {dir(wifi)}")
-            print(f"access point SSID = {secr}")
-            print(f"ezwifi.ipv4() = {ip}")
-            """
-                stats = {
-                 0: 'IDLE', \
-                 1: 'CONNECTING', \
-                -3: 'WRONG PASSWORD', \
-                -2: 'NO AP FOUND', \
-                -1: 'CONNECT_FAIL', \
-                 3: 'GOT_IP'}
-            """
-            # print(f"stats = {stats}")
-
-    def failed_handler(wifi):
-        print("Afff...WiFi connection failed!")
-        #pass
-    
-    try:
-        #wifi.connect()  # connectd is wifi <generator object 'connect' at 11038b90>object! ()
-        ezwifi.connect(verbose=True if my_debug == True else False,
-                       connected=connect_handler, failed=failed_handler)
-    except ValueError as e:
-        while True:
-            show_message(e) # type: ignore
-    except ImportError as e:
-        while True:
-            show_message(e) # type: ignore
-
-    if connected == True:
-        print(f"Connected to: \"{secr}\"")
-        print(f"ip = {ip}")
+    connected = presto.wifi.isconnected()
+    if not connected:
+        show_message("Connecting WiFi")
+        connected = presto.connect()
     else:
-        print("wifi not connected")
-        raise RuntimeError
-            
+        print(f"Wifi already connected")
+    
+    ip = presto.wifi.ipv4()
+    secr = presto.wifi._secrets()[0]
+    
+    if connected:
+        t1 = "WiFi connected to\n{:s}".format(secr)
+    else:
+        t1 = "Afff...WiFi connection\nto {:s}\nfailed".format(secr)
+    show_message(t1)
+    
+    # stats = presto.wifi._statuses
+    if my_debug:
+        print("Hurray! We have a WiFi connection!")
+        # print(f"dir(presto.wifi) = {dir(presto.wifi)}")
+        print(f"access point SSID = {secr}")
+        print(f"presto.wifi.ipv4() = {ip}")
+        """
+            stats = {
+             0: 'IDLE', \
+             1: 'CONNECTING', \
+            -3: 'WRONG PASSWORD', \
+            -2: 'NO AP FOUND', \
+            -1: 'CONNECT_FAIL', \
+             3: 'GOT_IP'}
+        """
+        # print(f"stats = {stats}")
+      
     if ip is not None:
         UDP_IP = str(ip)
         if my_debug:
@@ -133,13 +139,8 @@ if use_xp12:
         else:
             if my_debug:
                 print(f"We have a socket: {sock}.")
-def show_message(text):
-    display.set_pen(GRAY)
-    display.clear()
-    display.set_pen(WHITE)
-    display.text(f"{text}", 5, 10, WIDTH, 2)
-    presto.update()
 
+                
 def DecodeDataMessage(message):
     TAG = "DecodeDataMessage(): "
     # Message consists of 4 byte type and 8 times a 4byte float value.
@@ -217,191 +218,199 @@ def DecodePacket(data):
             print(TAG + "  Data: ", messages)
     return valuesout
 
-def setup():
-    pass    
-    
-def main():
-    global use_xp12, sock, x_prev, y_prev
-    TAG = "main(): "
 
-    setup()
-    
-    data = None
-    addr = None
-    ax = 0.0
-    ay = 0.0
-    az = 0.0
-    
-    x_axis = 0.0
-    y_axis = 0.0
-    alpha = 0.15
-    
-    # UDP msg type sensitivity factors
+
+TAG = "main(): "
+data = None
+addr = None
+ax = 0.0
+ay = 0.0
+az = 0.0
+
+x_axis = 0.0
+y_axis = 0.0
+alpha = 0.15
+
+# UDP msg type sensitivity factors
+if use_xp12:
     msg_type = None
     type08_mult = 10000
     type17_mult = 100
     le_data = 0
+    time_out_cnt = 0
+    time_out_max_cnt = 3
     
-    while True:
-        
-        if use_xp12:
-            if sock is None:
-                if my_debug:
-                    print(f"type(sock) = {type(sock)}. Check WiFi. Cannot continue...")
-                raise RuntimeError
-            else:
-                deadline = time.ticks_ms() + 5000 # 5 seconds
-                if my_debug:
-                    print(f"socket timeout deadline = {deadline} mSecs")
-                sock.setblocking(False)  # Switch off blocking.
-                while True:
-                    try:
-                        t_out = deadline - time.ticks_ms()
-                        print(f"timeout = {t_out} mSecs")
-                        sock.settimeout(t_out)
-                        # Receive a packet
-                        data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-                        if isinstance(data, bytes):
-                            if my_debug:
-                                print(f"data = \"{data}\"")
-                            le_data = len(data)
-                            if le_data > 0:
-                                if my_debug:
-                                    print(f"length data received: {le_data}") # usual: 221 bytes
-                                break
-                    except TimeoutError as exc:
-                        print(f"X-Plane12 receive socket timed out with error: {exc}")
-                    except OSError as exc:
-                        errnr = exc.args[0]
-                        if errnr == 11: # EAGAIN
-                            if my_debug:
-                                print(f"EAGAIN error occurred. Skipping.")
-                            continue
-                        else:
-                            print(TAG + f"Error: {exc}")
-                
-                # Decode the packet. Result is a python dict (like a map in C) with values from X-Plane.
-                # Example:                         magnetic           true
-                #   'roll': 1.05, 'pitch': -4.38, 'heading': 275.43, 'heading2': 271.84}
-                if data is None:
-                    ax = 0.0 # Make that the attitude indicator is set horizontal
-                    ay = 0.0
-                    y_axis = 370,
-                    y_prev = 370,
-                    y_axis = 370,
-                    y_prev = 370
-                    if my_debug:
-                        print(f"Noting received (yet): data = \"{data}\"")
-                else:  
-                    if my_debug:
-                        print(TAG + f"packet received from host with IP-addres: {addr[0]}, via port: {addr[1]}")
-                    values = DecodePacket(data)
-                    if "type" in values.keys():
-                        msg_type = values["type"]
-                        if my_debug:
-                            print(f"message type received: {msg_type}")
-                    else:
-                        msg_type = 99 # pseudo for unknown message type
-                        
-                    if msg_type != 8 and msg_type != 17:
-                        continue  # go around
-
-                    if use_joystick_data: 
-                        if values["type"] == 8:  # = Joystick
-                            ax = values["aileron"]   * type08_mult  # pitch
-                            ay = values["elevation"] * type08_mult  # roll
-                            az = values["rudder"]    * type08_mult  # heading
-
-                            if not my_debug:
-                                t1 = "ax: {:9.5f}, ay: {:9.4f}, az: {:8.2f}".format(ax, ay, az)
-                                print(TAG + f"data from X-Plane12: {t1}")
-                                # print(TAG + f" values: {values}")
-                        else:
-                            if my_debug:
-                                print(TAG + f"No data received of type: 8")
-                    else:
-                        if values["type"] == 17: # = aircraft attitude
-                            ax = values["roll"]    * type17_mult  # pitch
-                            ay = values["pitch"]   * type17_mult  # roll
-                            az = values["heading"] * type17_mult  # heading
-
-                            if not my_debug:
-                                t1 = "ax: {:9.5f}, ay: {:9.4f}, az: {:8.2f}".format(ax, ay, az)
-                                print(TAG + f"data from X-Plane12: {t1}")
-                                # print(TAG + f" values: {values}")
-                        
-                        else:
-                            if my_debug:
-                                print(TAG + f"No data received of type: 17")
-                    
-                    # Clear screen with the SKY colour
-                    display.set_pen(SKY_COLOUR)
-                    display.clear()
+while True:
+    
+    if use_xp12:
+        if sock is None:
+            if my_debug:
+                print(TAG + f"type(sock) = {type(sock)}. Check WiFi. Cannot continue...")
+            raise RuntimeError
         else:
-            try:
-                i2c = machine.I2C()
-                sensor = LSM6DS3(i2c, mode=NORMAL_MODE_104HZ)
-            except OSError:
-                while True:
-                    show_message("No Multi-Sensor stick detected!\n\nConnect and try again.")
-                    raise RuntimeError
 
-            # Clear screen with the SKY colour
-            display.set_pen(SKY_COLOUR)
-            display.clear()
-
-            try:
-                # Get the raw readings from the sensor
-                ax, ay, az, gx, gy, gz = sensor.get_readings()
-            except OSError:
-                while True:
-                    show_message("Multi-Sensor stick disconnected!\n\nReconnect and reset your Presto.")
+            sock.setblocking(True)  # Switch on blocking.
+            while True:
+                try:
+                    sock.settimeout(5)  # set timeout to 5 seconds
+                    # Receive a packet
+                    data, addr = sock.recvfrom(512) # buffer size is 512 bytes
+                    if isinstance(data, bytes):
+                        if my_debug:
+                            print(TAG + f"data received = \"{data}\"")
+                        le_data = len(data)
+                        if le_data > 0:
+                            if not my_debug:
+                                print(TAG + f"length data received: {le_data}") # usual: 221 bytes
+                            break
+                except OSError as exc:
+                    errnr = exc.args[0]
+                    if errnr == 110: # ETIMEDOUT
+                        time_out_cnt += 1
+                        if time_out_cnt > time_out_max_cnt:
+                            break  # receiving data failed. Exit
+                        if not my_debug:
+                            t1 = "socket timed out.\n\n\tIs X-Plane12 running?\n\n\tIs it setup for\nsending data?"
+                            disp_text(t1)
+                            print(TAG + f"{t1}")
+                    elif errnr == 11: # EAGAIN
+                        if not my_debug:
+                            print(TAG + f"EAGAIN error occurred. Skipping.")
+                        continue
+                    else:
+                        print(TAG + f"Error: {exc}")
+            
+            # Decode the packet. Result is a python dict (like a map in C) with values from X-Plane.
+            # Example:                         magnetic           true
+            #   'roll': 1.05, 'pitch': -4.38, 'heading': 275.43, 'heading2': 271.84}
+            if data is None:
+                ax = 0.0 # Make that the attitude indicator is set horizontal
+                ay = 0.0
+                x_axis = 370
+                x_prev = 370
+                y_axis = 370
+                y_prev = 370
+                if my_debug:
+                    print(f"Noting received (yet): data = \"{data}\"")
+            else:  
+                if my_debug:
+                    print(TAG + f"packet received from host with IP-addres: {addr[0]}, via port: {addr[1]}")
+                values = DecodePacket(data)
+                if "type" in values.keys():
+                    msg_type = values["type"]
+                    if my_debug:
+                        print(f"message type received: {msg_type}")
+                else:
+                    msg_type = 99 # pseudo for unknown message type
                     
+                if msg_type != 8 and msg_type != 17:
+                    continue  # go around
 
-        # Apply some smoothing to the X and Y
-        # and cap the Y with min/max
-        if not my_debug:
-            t1 = "y_axis = {:>6.0f}, alpha = {:4.2f}, ay  {:>6d}, y_prev = {:>6d}".format(y_axis, alpha, ay, y_prev)
-            print(TAG + f"{t1}")
-        y_axis = max(-11000, min(int(alpha * ay + (1 - alpha) * y_prev), 11000))
-        # print(TAG + f"y_axis = {y_axis}")
-        y_prev = y_axis
+                if use_joystick_data: 
+                    if values["type"] == 8:  # = Joystick
+                        ax = values["aileron"]   * type08_mult  # pitch
+                        ay = values["elevation"] * type08_mult  # roll
+                        az = values["rudder"]    * type08_mult  # heading
 
-        x_axis = int(alpha * ax + (1 - alpha) * x_prev)
-        x_prev = x_axis
+                        if not my_debug:
+                            t1 = "ax: {:9.5f}, ay: {:9.4f}, az: {:8.2f}".format(ax, ay, az)
+                            print(TAG + f"data from X-Plane12: {t1}")
+                            # print(TAG + f" values: {values}")
+                    else:
+                        if my_debug:
+                            print(TAG + f"No data received of type: 8")
+                else:
+                    if values["type"] == 17: # = aircraft attitude
+                        ax = values["roll"]    * type17_mult  # pitch
+                        ay = values["pitch"]   * type17_mult  # roll
+                        az = values["heading"] * type17_mult  # heading
 
-        if my_debug:
-            t1 = "ax = {:>6d}, ay = {:>6d}, az = {:>6d}".format(ax, ay, az)
-            print(TAG + f"{t1}")
-            t1 = "x_axis = {:>6.0f}, x_prev = {:>6d}, y_axis = {:>6.0f}, y_prev = {:>6d}".format(x_axis, x_prev, y_axis, y_prev)
-            print(TAG + f"{t1}")
-        # Draw the ground
-        t.reset()
-        t.rotate(-x_axis / 180, (WIDTH // 2, HEIGHT // 2))
-        t.translate(0, y_axis / 100)
+                        if not my_debug:
+                            t1 = "ax: {:9.5f}, ay: {:9.4f}, az: {:8.2f}".format(ax, ay, az)
+                            print(TAG + f"data from X-Plane12: {t1}")
+                            # print(TAG + f" values: {values}")
+                    
+                    else:
+                        if my_debug:
+                            print(TAG + f"No data received of type: 17")
+                
+                # Clear screen with the SKY colour
+                display.set_pen(SKY_COLOUR)
+                display.clear()
+    else:
+        try:
+            i2c = machine.I2C()
+            sensor = LSM6DS3(i2c, mode=NORMAL_MODE_104HZ)
+        except OSError:
+            while True:
+                show_message("No Multi-Sensor stick detected!\n\nConnect and try again.")
+                raise RuntimeError
 
-        vector.set_transform(t)
-        display.set_pen(GROUND_COLOUR)
-        vector.draw(ground)
-        display.set_pen(WHITE)
-        vector.draw(horizon)
-        vector.draw(pitch_lines)
-        vector.set_transform(normal)
+        # Clear screen with the SKY colour
+        display.set_pen(SKY_COLOUR)
+        display.clear()
 
-        # Draw the aircraft
-        display.set_pen(RED)
-        vector.draw(craft_centre)
-        vector.draw(craft_left)
-        vector.draw(craft_right)
-        vector.draw(craft_arc)
+        try:
+            # Get the raw readings from the sensor
+            ax, ay, az, gx, gy, gz = sensor.get_readings()
+        except OSError:
+            while True:
+                show_message("Multi-Sensor stick disconnected!\n\nReconnect and reset your Presto.")
+                
 
-        display.set_pen(GRAY)
-        vector.draw(background_rect)
-        display.set_pen(BLACK)
-        vector.draw(instrument_outline)
+    if use_xp12 and data is None:
+        # display.set_pen(BLACK)
+        display.set_pen(SKY_COLOUR)
+        display.clear()
+        ax = 0.0 # Make that the attitude indicator is set horizontal
+        ay = 0.0
+        x_axis = 370
+        x_prev = 370
+        y_axis = 370
+        y_prev = 370
 
-        # Update the screen so we can see our changes
-        presto.update()
+    # Apply some smoothing to the X and Y
+    # and cap the Y with min/max
+    if my_debug:
+        t1 = "y_axis = {:>6.0f}, alpha = {:4.2f}, ay  {:>6d}, y_prev = {:>6d}".format(y_axis, alpha, ay, y_prev)
+        print(TAG + f"{t1}")
+    y_axis = max(-11000, min(int(alpha * ay + (1 - alpha) * y_prev), 11000))
+    # print(TAG + f"y_axis = {y_axis}")
+    y_prev = y_axis
 
-if __name__ == '__main__':
-    main()
+    x_axis = int(alpha * ax + (1 - alpha) * x_prev)
+    x_prev = x_axis
+
+    if my_debug:
+        t1 = "ax = {:>6d}, ay = {:>6d}, az = {:>6d}".format(ax, ay, az)
+        print(TAG + f"{t1}")
+        t1 = "x_axis = {:>6.0f}, x_prev = {:>6d}, y_axis = {:>6.0f}, y_prev = {:>6d}".format(x_axis, x_prev, y_axis, y_prev)
+        print(TAG + f"{t1}")
+    # Draw the ground
+    trf.reset()
+    trf.rotate(-x_axis / 180, (WIDTH // 2, HEIGHT // 2))
+    trf.translate(0, y_axis / 100)
+
+    vector.set_transform(trf)
+    display.set_pen(GROUND_COLOUR)
+    vector.draw(ground)
+    display.set_pen(WHITE)
+    vector.draw(horizon)
+    vector.draw(pitch_lines)
+    vector.set_transform(normal)
+
+    # Draw the aircraft
+    display.set_pen(RED)
+    vector.draw(craft_centre)
+    vector.draw(craft_left)
+    vector.draw(craft_right)
+    vector.draw(craft_arc)
+
+    display.set_pen(GRAY)
+    vector.draw(background_rect)
+    display.set_pen(BLACK)
+    vector.draw(instrument_outline)
+
+    # Update the screen so we can see our changes
+    presto.update()
+
