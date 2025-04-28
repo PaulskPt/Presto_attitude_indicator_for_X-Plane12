@@ -8,9 +8,13 @@ This is a modified version of the example ```Demo for the Multi-Sensor Stick``` 
 
 In it's modified version the attitude indicator uses UDP-datagram messages broadcasted by the X-Plane12 [flightsimulator](https://www.x-plane.com/desktop/buy-it/).
 
+## Using the original attitude indicator
+
 You still can use this example in its original way.
 
 To use the data from the Multi-Sensor Stick set global variable "use_xp12" to ```False``` (line 12).
+
+## Using X-Plane12 data
 
 Default the global variable "use_xp12" is set to ```True```.
 
@@ -30,7 +34,7 @@ X-Plane12 > Settings > Data Output >
 
 ```
 
-Notes:
+## Notes
 1) the WiFi functionality is only used when the global variable "use_xp12" is set to: ```True```.
 2) to see more output: set global variable "my_debug" to ```True``` (line 11)
 3) the sensitivity for the deflection of the attitude indicator can be changed by altering the following variables:
@@ -50,3 +54,13 @@ For a short video impression see: [video](https://imgur.com/a/rfMumGc)
 
 This is the first try to change the current attitude indicator example for use with the X-Plane12 flightsimulator software.
 Suggestions are welcome.
+
+## Known problems
+
+The script does not start up well after a reset of the Presto device and touching the icon ```Attitude Indicator```.
+Temporary workaround:
+- Start Thonny;
+- Reset the Presto;
+- Click the STOP button in Thonny (you need to see a command prompt in the shell window);
+- Click the RUN button in Thonny.
+  
