@@ -8,6 +8,11 @@ This is a modified version of the example ```Demo for the Multi-Sensor Stick``` 
 
 In it's modified version the attitude indicator uses UDP-datagram messages broadcasted by the X-Plane12 [flightsimulator](https://www.x-plane.com/desktop/buy-it/).
 
+## Preparation
+
+Copy both files: ```attitude_indicator.py``` and ```secrets.py``` from this repo onto your Presto device.
+In the file ```secret.py``` fill-in the SSID and PASSWORD of your local WiFi access point.
+
 ## Using the original attitude indicator
 
 You still can use this example in its original way.
