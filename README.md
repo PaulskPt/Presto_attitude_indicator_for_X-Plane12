@@ -62,5 +62,6 @@ Temporary workaround:
 - Start Thonny;
 - Reset the Presto;
 - Click the STOP button in Thonny (you need to see a command prompt in the shell window);
+- Load the script ```attitude_indicator.py``` from the memory of the Presto device into Thonny
 - Click the RUN button in Thonny.
   
