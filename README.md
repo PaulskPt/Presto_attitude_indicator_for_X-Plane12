@@ -17,7 +17,7 @@ In the file ```secrets.py``` fill-in the SSID and PASSWORD of your local WiFi ac
 
 You still can use this example in its original way.
 
-To use the data from the Multi-Sensor Stick set global variable "use_xp12" to ```False``` (line 12).
+To use the data from the Multi-Sensor Stick set global variable "use_xp12" to ```False``` (line 13).
 
 ## Using X-Plane12 data
 
@@ -41,12 +41,14 @@ X-Plane12 > Settings > Data Output >
 
 ## Notes
 1) the WiFi functionality is only used when the global variable "use_xp12" is set to: ```True```.
-2) to see more output: set global variable "my_debug" to ```True``` (line 11)
+2) to see more output: set global variable "my_debug" to ```True``` (line 12)
 3) the sensitivity for the deflection of the attitude indicator can be changed by altering the following variables:
 ```
-    239 # X-Plane12 data sensitivity factors
-    240 type08_mult = 10000 #  (attitude indicator as function of Joystick movement)
-    241 type17_mult = 100   # (attitude indicator as function of Aircraft movement (default))
+    234 # UDP msg type sensitivity factors
+    235 if use_xp12:
+    236     msg_type = None
+    237     type08_mult = 10000 #  (attitude indicator as function of Joystick movement)
+    238     type17_mult = 100   # (attitude indicator as function of Aircraft movement (default))
 
 ```
 5) in the file ```secrets.py``` fill-in the SSID of your WiFi access point and the PASSWORD.
