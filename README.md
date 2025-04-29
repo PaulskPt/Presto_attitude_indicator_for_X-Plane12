@@ -11,7 +11,7 @@ In it's modified version the attitude indicator uses UDP-datagram messages broad
 ## Preparation
 
 Copy both files: ```attitude_indicator.py``` and ```secrets.py``` from this repo onto your Presto device.
-In the file ```secret.py``` fill-in the SSID and PASSWORD of your local WiFi access point.
+In the file ```secrets.py``` fill-in the SSID and PASSWORD of your local WiFi access point.
 
 ## Using the original attitude indicator
 
