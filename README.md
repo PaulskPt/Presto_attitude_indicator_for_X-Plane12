@@ -42,7 +42,7 @@ X-Plane12 > Settings > Data Output >
 ## Notes
 1) the WiFi functionality is only used when the global variable "use_xp12" is set to: ```True```.
 2) to see more output: set global variable "my_debug" to ```True``` (line 12)
-3) the sensitivity for the deflection of the attitude indicator can be changed by altering the following variables:
+3) the sensitivity for the deflection of the attitude indicator can be changed by altering the variables: type08_mult and/or type17_mult below:
 ```
     234 # UDP msg type sensitivity factors
     235 if use_xp12:
