@@ -63,12 +63,5 @@ This is the first try to change the current attitude indicator example for use w
 Suggestions are welcome.
 
 ## Known problems
-
-The script does not start up well after a reset of the Presto device and touching the icon ```Attitude Indicator```.
-Temporary workaround:
-- Start Thonny;
-- Reset the Presto;
-- Click the STOP button in Thonny (you need to see a command prompt in the shell window);
-- Load the script ```attitude_indicator.py``` from the memory of the Presto device into Thonny
-- Click the RUN button in Thonny.
+App start problem that was reported here has been solved
   
