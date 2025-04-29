@@ -254,14 +254,15 @@ while True:
                 try:
                     sock.settimeout(5)  # set timeout to 5 seconds
                     # Receive a packet
-                    data, addr = sock.recvfrom(512) # buffer size is 512 bytes
+                    data, addr = sock.recvfrom(256) # buffer size is 512 bytes
                     if isinstance(data, bytes):
                         if my_debug:
                             print(TAG + f"data received = \"{data}\"")
                         le_data = len(data)
                         if le_data > 0:
                             if not my_debug:
-                                print(TAG + f"length data received: {le_data}") # usual: 221 bytes
+                                # packet length usual: 77 to 221 bytes, depending howmany messages chosen
+                                print(TAG + f"length data received: {le_data}") 
                             break
                 except OSError as exc:
                     errnr = exc.args[0]
@@ -310,7 +311,7 @@ while True:
                     if values["type"] == 8:  # = Joystick
                         ax = values["aileron"]   * type08_mult  # roll
                         ay = values["elevation"] * type08_mult  # pitch
-                        az = values["rudder"]    * type08_mult  # heading
+                        az = int(values["rudder"])  # heading
 
                         if not my_debug:
                             t1 = "ax: {:9.5f}, ay: {:9.4f}, az: {:8.2f}".format(ax, ay, az)
@@ -323,7 +324,7 @@ while True:
                     if values["type"] == 17: # = aircraft attitude
                         ax = values["roll"]    * type17_mult * 1.5  # roll
                         ay = values["pitch"]   * type17_mult  # # pitch
-                        az = values["heading"] * type17_mult  # heading
+                        az = int(values["heading"]) # heading
 
                         if not my_debug:
                             t1 = "ax: {:9.5f}, ay: {:9.4f}, az: {:8.2f}".format(ax, ay, az)
